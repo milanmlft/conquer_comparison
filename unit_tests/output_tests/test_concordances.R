@@ -2,9 +2,9 @@
 
 suppressPackageStartupMessages(library(iCOBRA))
 
-topdir <- "/home/Shared/data/seq/conquer/comparison"
-
-source(paste0(topdir, "/scripts/concordance_functions.R"))
+# Find root file of the project and load functions
+root <- rprojroot::find_rstudio_root_file()
+source(file.path(root, "scripts/concordance_functions.R"))
 
 get_method <- function(x) sapply(strsplit(x, "\\."), .subset, 1)
 get_nsamples <- function(x) sapply(strsplit(x, "\\."), .subset, 2)
@@ -34,8 +34,8 @@ test_that("concordance calculations are correct on small example", {
 test_that("concordance calculations are correct on real data", {
   ds <- "GSE74596"
   exts <- "_TPM_1_25p"
-  cobra <- readRDS(paste0(topdir, "/output/cobra_data/", ds, exts, "_cobra.rds"))
-  concordances <- readRDS(paste0(topdir, "/output/concordances/", ds, exts, "_concordances.rds"))
+  cobra <- readRDS(file.path(root, "output/cobra_data/", ds, exts, "_cobra.rds"))
+  concordances <- readRDS(file.path(root, "output/concordances/", ds, exts, "_concordances.rds"))
 
   pval(cobra)[is.na(pval(cobra))] <- 1
   padj(cobra)[is.na(padj(cobra))] <- 1
@@ -149,5 +149,4 @@ test_that("concordance calculations are correct on real data", {
   conc_auc <- caTools::trapz(c(0, conc$k, conc$k[length(conc$k)]), 
                              c(0, conc$p, 0))/(maxn^2/2)
   expect_equal(trueconc$AUCs[trueconc$k == maxn], conc_auc)
-  
 })

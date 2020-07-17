@@ -1,11 +1,13 @@
 ## Test data generation and subsetting
 
-topdir <- "/home/Shared/data/seq/conquer/comparison"
-
 suppressPackageStartupMessages(library(SummarizedExperiment))
 suppressPackageStartupMessages(library(MultiAssayExperiment))
 suppressPackageStartupMessages(library(rjson))
-source(paste0(topdir, "/scripts/prepare_mae.R"))
+
+# Find root file of the project and set results directories
+# Find root file of the project and load functions
+root <- rprojroot::find_rstudio_root_file()
+source(file.path(root, "scripts/prepare_mae.R"))
 
 test_that("cells in subsets are assigned the right class", {
   gw <- getwd()
@@ -14,6 +16,9 @@ test_that("cells in subsets are assigned the right class", {
     config <- fromJSON(file = paste0("config/", ds, ".json"))
     subsets <- readRDS(config$subfile)
     data <- readRDS(config$mae)
+    config <- fromJSON(file = file.path(root, paste0("config/", ds, ".json")))
+    subsets <- readRDS(file.path(root, config$subfile))
+    data <- readRDS(file.path(root, config$mae))
     data <- clean_mae(mae = data, groupid = config$groupid)
     pdt <- pData(data)
     for (i in config$sizes) {
@@ -47,5 +52,4 @@ test_that("cells in subsets are assigned the right class", {
       }
     }
   }
-  setwd(gw)
 })

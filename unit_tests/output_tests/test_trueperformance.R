@@ -1,24 +1,23 @@
 ## Test true performance calculation
 
-topdir <- "/home/Shared/data/seq/conquer/comparison"
-
 suppressPackageStartupMessages(library(iCOBRA))
+
+# Find root file of the project
+root <- rprojroot::find_rstudio_root_file()
 
 get_method <- function(x) sapply(strsplit(x, "\\."), .subset, 1)
 get_nsamples <- function(x) sapply(strsplit(x, "\\."), .subset, 2)
 get_repl <- function(x) sapply(strsplit(x, "\\."), .subset, 3)
 
 test_that("true performance is correctly calculated", {
-  gw <- getwd()
-  setwd(topdir)
   for (ds in c("GSE45719sim123", "GSE74596sim123", "GSE48968-GPL13112sim123")) {
     for (f in c("", "_TPM_1_25p")) {
-      cobra <- readRDS(paste0(topdir, "/output/cobra_data/", ds, f, "_cobra.rds"))
-      perf <- readRDS(paste0(topdir, "/output/performance_realtruth/", ds, f, "_performance.rds"))
+      cobra <- readRDS(file.path(root, "output/cobra_data/", ds, f, "_cobra.rds"))
+      perf <- readRDS(file.path(root, "output/performance_realtruth/", ds, f, "_performance.rds"))
       if ("cobraperf" %in% names(perf)) {
         perf <- perf$cobraperf
       }
-      truth <- readRDS(paste0(topdir, "/data/", ds, "_truth.rds"))
+      truth <- readRDS(file.path(root, "data/", ds, "_truth.rds"))
 
       for (mth in colnames(padj(cobra))) {
         trt <- truth(cobra) %>% 
@@ -84,5 +83,4 @@ test_that("true performance is correctly calculated", {
       }
     }        
   }
-  setwd(gw)
 })
