@@ -8,6 +8,7 @@ Rout/
 data/*.rds
 results/
 subsets/
+orig_results/
 
 # conquer output
 output/
