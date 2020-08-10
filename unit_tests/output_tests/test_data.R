@@ -4,18 +4,17 @@ suppressPackageStartupMessages(library(SummarizedExperiment))
 suppressPackageStartupMessages(library(MultiAssayExperiment))
 suppressPackageStartupMessages(library(rjson))
 
-# Find root file of the project and set results directories
 # Find root file of the project and load functions
 root <- rprojroot::find_rstudio_root_file()
 source(file.path(root, "scripts/prepare_mae.R"))
+source(file.path(root, "unit_tests/helpers.R"))
+
+# Find datasets used in current pipeline run
+current_datasets <- get_current_datasets()
 
 test_that("cells in subsets are assigned the right class", {
-  gw <- getwd()
-  setwd(topdir)
-  for (ds in c("EMTAB2805", "EMTAB2805mock", "GSE45719", "GSE45719mock", "GSE74596", "GSE74596mock", "UsoskinGSE59739", "UsoskinGSE59739mock", "EGEUV1", "EGEUV1mock", "GSE63818-GPL16791", "GSE60749-GPL13112", "GSE60749-GPL13112mock", "GSE48968-GPL13112", "GSE48968-GPL13112mock", "GSE45719sim123", "GSE45719sim123mock", "GSE74596sim123", "GSE74596sim123mock", "GSE48968-GPL13112sim123", "GSE48968-GPL13112sim123mock")) {
-    config <- fromJSON(file = paste0("config/", ds, ".json"))
-    subsets <- readRDS(config$subfile)
-    data <- readRDS(config$mae)
+  for (ds in current_datasets) {
+    message(ds)
     config <- fromJSON(file = file.path(root, paste0("config/", ds, ".json")))
     subsets <- readRDS(file.path(root, config$subfile))
     data <- readRDS(file.path(root, config$mae))
