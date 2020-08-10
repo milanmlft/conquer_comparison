@@ -8,27 +8,37 @@ suppressPackageStartupMessages(library(iCOBRA))
 # Find root file of the project and load functions
 root <- rprojroot::find_rstudio_root_file()
 source(file.path(root, "scripts/prepare_mae.R"))
+source(file.path(root, "unit_tests/helpers.R"))
+
+# Find datasets and filters used in current pipeline run
+current_datasets <- get_current_datasets()
+current_filters <- get_current_filters()
 
 get_method <- function(x) sapply(strsplit(x, "\\."), .subset, 1)
 get_nsamples <- function(x) sapply(strsplit(x, "\\."), .subset, 2)
 get_repl <- function(x) sapply(strsplit(x, "\\."), .subset, 3)
 
 test_that("COBRAData object is correctly assembled", {
-  for (ds in c("EMTAB2805", "EMTAB2805mock", "GSE45719", "GSE45719mock", "GSE74596", "GSE74596mock", "UsoskinGSE59739", "UsoskinGSE59739mock", "EGEUV1", "EGEUV1mock", "GSE63818-GPL16791", "GSE60749-GPL13112", "GSE60749-GPL13112mock", "GSE48968-GPL13112", "GSE48968-GPL13112mock", "GSE45719sim123", "GSE45719sim123mock", "GSE74596sim123", "GSE74596sim123mock", "GSE48968-GPL13112sim123", "GSE48968-GPL13112sim123mock")) {
+  for (ds in current_datasets) {
     config <- fromJSON(file = file.path(root, paste0("config/", ds, ".json")))
     subsets <- readRDS(file.path(root, config$subfile))
     data <- readRDS(file.path(root, config$mae))
     data <- clean_mae(mae = data, groupid = config$groupid)
     
-    for (f in c("", "_TPM_1_25p")) {
-      cobra <- readRDS(file.path(root, "output/cobra_data/", ds, f, "_cobra.rds"))
-      ngenes <- readRDS(file.path(root, "output/cobra_data/", ds, f, "_nbr_called.rds"))
+    for (f in current_filters) {
+      if (f != "") f <- paste0("_", f)
+      cobra <- readRDS(
+        file.path(root, "output/cobra_data", paste0(ds, f, "_cobra.rds"))
+      )
+      ngenes <- readRDS(
+        file.path(root, "output/cobra_data", paste0(ds, f, "_nbr_called.rds"))
+      )
       
       all_methods <- unique(get_method(colnames(padj(cobra))))
       for (mth in all_methods) {
         ## Test that adjusted p-values in COBRAData object are the same as in
         ## the individual result files
-        res <- readRDS(file.path(root, "results/", ds, "_", mth, ".rds"))
+        res <- readRDS(file.path(root, "results", paste0(ds, "_", mth, ".rds")))
         for (nm in names(res)) {
           if ("padj" %in% colnames(res[[nm]]$df)) {
             expect_equal(res[[nm]]$df$padj[match(rownames(padj(cobra)), rownames(res[[nm]]$df))], 

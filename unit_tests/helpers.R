@@ -28,6 +28,15 @@ get_current_methods <- function() {
   unique(sub("^[^_]+_([^_,.]+).*\\.rds", "\\1", res_files))
 }
 
+# Find filtering used in current pipeline run
+get_current_filters <- function() {
+  res_dir <- find_res_dir()
+  res_files <- list.files(res_dir)
+  
+  # Extract and return current filters
+  unique(sub("^[^_]+_[^_,.]+_?(.*)\\.rds", "\\1", res_files))
+}
+
 # Function to read in pipeline results
 get_results <- function(res_dir = find_res_dir()) {
   res_files <- list.files(res_dir)
