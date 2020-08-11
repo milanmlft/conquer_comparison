@@ -46,7 +46,7 @@ The list of mouse cell cycle genes was obtained from [http://www.sabiosciences.c
 
 ## Unit tests
 To run all the unit tests, start `R`, load the `testthat` package and run 
-``source("scripts/run_unit_tests.R")``. Alternatively, to run just the unit tests in a given file, do e.g. ``test_file("unit_tests/test_trueperformance.R", reporter = "summary")``.
+``source("unit_tests/run_unit_tests.R")``. Alternatively, to run just the unit tests in a given file, do e.g. ``test_file("unit_tests/output_tests/test_trueperformance.R", reporter = "summary")``.
 
 
 ## Docker container
