@@ -1,10 +1,17 @@
 ## Test concordance calculations with small example
 
 suppressPackageStartupMessages(library(iCOBRA))
+suppressPackageStartupMessages(library(dplyr))
 
 # Find root file of the project and load functions
 root <- rprojroot::find_rstudio_root_file()
 source(file.path(root, "scripts/concordance_functions.R"))
+source(file.path(root, "unit_tests/helpers.R"))
+
+# Find datasets, filters and methods used in current pipeline run
+current_datasets <- get_current_datasets()
+current_filters <- get_current_filters()
+current_methods <- get_current_methods()
 
 get_method <- function(x) sapply(strsplit(x, "\\."), .subset, 1)
 get_nsamples <- function(x) sapply(strsplit(x, "\\."), .subset, 2)
@@ -32,10 +39,19 @@ test_that("concordance calculations are correct on small example", {
 })
 
 test_that("concordance calculations are correct on real data", {
-  ds <- "GSE74596"
-  exts <- "_TPM_1_25p"
-  cobra <- readRDS(file.path(root, "output/cobra_data/", ds, exts, "_cobra.rds"))
-  concordances <- readRDS(file.path(root, "output/concordances/", ds, exts, "_concordances.rds"))
+  ds <- current_datasets[[1]]
+  f <- current_filters[[1]]
+  if (f == "") {
+    exts <- f
+  } else {
+    exts <- paste0("_", f)
+  }
+  cobra <- readRDS(
+    file.path(root, "output/cobra_data", paste0(ds, exts, "_cobra.rds"))
+  )
+  concordances <- readRDS(
+    file.path(root, "output/concordances", paste0(ds, exts, "_concordances.rds"))
+  )
 
   pval(cobra)[is.na(pval(cobra))] <- 1
   padj(cobra)[is.na(padj(cobra))] <- 1
@@ -73,7 +89,7 @@ test_that("concordance calculations are correct on real data", {
   maxn <- 100
   
   ## Single method, all instances
-  mth <- "DESeq2"
+  mth <- current_methods[[1]]
   tmp <- pv[1:maxn, which(get_method(colnames(pv)) == paste0(mth, exts))]
   expect_equal(ncol(tmp), 16)
   
@@ -93,7 +109,6 @@ test_that("concordance calculations are correct on real data", {
   expect_equal(trueconc$AUCs[trueconc$k == maxn], conc_auc)
   
   ## Single method, given pair of instances
-  mth <- "DESeq2"
   n_cells <- 12
   inst1 <- 1
   inst2 <- 2
@@ -122,8 +137,8 @@ test_that("concordance calculations are correct on real data", {
   expect_equal(trueconc$AUCs[trueconc$k == maxn], conc_auc)
   
   ## Pair of methods, given instance
-  mth1 <- "DESeq2"
-  mth2 <- "Wilcoxon"
+  mth1 <- current_methods[[1]]
+  mth2 <- current_methods[[2]]
   n_cells <- 12
   inst1 <- 1
   tmp <- pv[1:maxn, which(get_method(colnames(pv)) %in% paste0(c(mth1, mth2), exts) & 
@@ -141,8 +156,8 @@ test_that("concordance calculations are correct on real data", {
     dplyr::filter(dataset == ds) %>%
     dplyr::filter(ncells == n_cells) %>%
     dplyr::filter(repl == inst1) %>%
-    dplyr::filter(method1 == paste0(mth2, exts)) %>%
-    dplyr::filter(method2 == paste0(mth1, exts))
+    dplyr::filter(method1 == paste0(mth1, exts)) %>%
+    dplyr::filter(method2 == paste0(mth2, exts))
   expect_equal(trueconc$k[1:maxn], conc$k)
   expect_equal(trueconc$nbr_genes[1:maxn], conc$p)
   
