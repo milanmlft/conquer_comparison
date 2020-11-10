@@ -196,7 +196,7 @@ scripts/summarize_crossmethod_consistency.R: scripts/help_function_crossmethod_c
 ## -------------------------- Generate configuration files ---------------------------- ##
 ## ------------------------------------------------------------------------------------ ##
 define configrule
-config/$(1).json: scripts/generate_config_$(1).R
+config/$(1).json: $(rout_dir) scripts/generate_config_$(1).R
 	mkdir -p config
 	$(R) scripts/generate_config_$(1).R $(rout_dir)/generate_config_$(1).Rout
 endef
